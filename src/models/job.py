@@ -58,12 +58,18 @@ class Job:
         return self.get_salary() != other.get_salary()
 
     def get_salary(self) -> int:
+        """
+        Возвращает зарплату в виде целого числа
+        """
         if self.salary_to == "Не указано зарплата" or self.salary_to is None:
             return 0
         # Пример для обработки зарплаты, нужно доработать под конкретный формат
         return self.salary_to
 
     def to_json(self) -> dict:
+        """
+        Возвращает словарь с данными о вакансии
+        """
         return {
             "name": self.title,
             "alternate_url": self.url,
@@ -84,6 +90,9 @@ class Job:
         }
     
     def to_dict(self) -> dict:
+        """
+        Возвращает словарь с данными о вакансии
+        """
         return {
             "name": self.title,
             "alternate_url": self.url,

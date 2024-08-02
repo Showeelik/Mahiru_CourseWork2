@@ -1,6 +1,6 @@
 from src.api.hh_api import HHAPI
 from src.utils import setup_logger
-from src.models.interaction import SearchInteraction, UserInteraction, FileInteraction
+from src.models.interaction import SearchInteraction, UserInteraction
 
 logger = setup_logger(__name__)
 

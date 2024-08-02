@@ -125,10 +125,28 @@ def find_city(data: List[Dict], city_name: str) -> Optional[int]:
                 return result
     return None
 
+def get_integer_input(prompt: str) -> int:
+    """
+    ### Возвращает целое число, введенное пользователем
+
+    ----------------
+    * Аргументы:
+        * prompt (str): Подсказка для ввода
+
+    ----------------
+    * Возвращается:
+        * int: Целое число
+    """
+    while True:
+        try:
+            value = int(input(prompt))
+            return value
+        except ValueError:
+            return 0
+
 class FileWorker(ABC):
     def __init__(self, file_name: str):
         self.file_name = file_name
-        self.file_path = os.path.join(DATA_DIR, self.file_name)
 
     @abstractmethod
     def save_data(self, data: List[Dict]) -> None:
@@ -140,71 +158,140 @@ class FileWorker(ABC):
 
 class JSONFileWorker(FileWorker):
 
-    def save_data(self, data: List[Dict]) -> None:
-        with open(self.file_path + '.json', 'w', encoding='utf-8') as file:
-            json.dump(data, file, ensure_ascii=False, indent=4)
 
     def save_data(self, data: List[Dict], directory: str = DATA_DIR) -> None:
+        """
+        Сохраняет данные в JSON-файл
+        
+        ----------------
+        * Аргументы:
+            * data (List[Dict]): Список словарей, содержащих информацию о вакансиях
+            * directory (str): Путь к директории
+        
+        ----------------
+        * Возвращается:
+            * None
+        """
         with open(os.path.join(directory, self.file_name + '.json'), 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
-        
-    def load_data(self) -> List[Dict]:
-        with open(self.file_path + '.json', 'r', encoding='utf-8') as file:
-            return json.load(file)
+
     
     def load_data(self, directory: str = DATA_DIR) -> List[Dict]:
+        """
+        Загружает данные из JSON-файла
+
+        ----------------
+        * Аргументы:
+            * directory (str): Путь к директории
+        
+        ----------------
+        * Возвращается:
+            * List[Dict]: Список словарей, содержащих информацию о вакансиях
+        """
         with open(os.path.join(directory, self.file_name + '.json'), 'r', encoding='utf-8') as file:
             return json.load(file)
 
 class ExcelFileWorker(FileWorker):
 
-    def save_data(self, data: List[Dict]) -> None:
-        df = pd.DataFrame(data)
-        df.to_excel(self.file_path + '.xlsx', index=False)
 
     def save_data(self, data: List[Dict], directory: str = DATA_DIR) -> None:
+        """
+        Сохраняет данные в Excel-файл
+        
+        ----------------
+        * Аргументы:
+            * data (List[Dict]): Список словарей, содержащих информацию о вакансиях
+            * directory (str): Путь к директории
+        
+        ----------------
+        * Возвращается:
+            * None
+        """
         df = pd.DataFrame(data)
         df.to_excel(os.path.join(directory, self.file_name + '.xlsx'), index=False)
         
-    def load_data(self) -> List[Dict]:
-        return pd.read_excel(self.file_path + '.xlsx').to_dict(orient='records')
+
     
     def load_data(self, directory: str = DATA_DIR) -> List[Dict]:
+        """
+        Загружает данные из Excel-файла
+
+        ----------------
+        * Аргументы:
+            * directory (str): Путь к директории
+        
+        ----------------
+        * Возвращается:
+            * List[Dict]: Список словарей, содержащих информацию о вакансиях
+        """
         return pd.read_excel(os.path.join(directory, self.file_name + '.xlsx')).to_dict(orient='records')
 
 class CSVFileWorker(FileWorker):
 
-    def save_data(self, data: List[Dict]) -> None:
-        df = pd.DataFrame(data)
-        df.to_csv(self.file_path + '.csv', index=False)
-
     def save_data(self, data: List[Dict], directory: str = DATA_DIR) -> None:
+        """
+        Сохраняет данные в CSV-файл
+
+        ----------------
+        * Аргументы:
+            * data (List[Dict]): Список словарей, содержащих информацию о вакансиях
+            * directory (str): Путь к директории
+        
+        ----------------
+        * Возвращается:
+            * None
+        """
         df = pd.DataFrame(data)
         df.to_csv(os.path.join(directory, self.file_name + '.csv'), index=False)
-        
-    def load_data(self) -> List[Dict]:
-        return pd.read_csv(self.file_path + '.csv').to_dict(orient='records')
+
     
     def load_data(self, directory: str = DATA_DIR) -> List[Dict]:
+        """
+        Загружает данные из CSV-файла
+
+        ----------------
+        * Аргументы:
+            * directory (str): Путь к директории
+
+        ----------------
+        * Возвращается:
+            * List[Dict]: Список словарей, содержащих информацию о вакансиях
+        """
         return pd.read_csv(os.path.join(directory, self.file_name + '.csv')).to_dict(orient='records')
 
 class TextFileWorker(FileWorker):
 
-    def save_data(self, data: List[Dict]) -> None:
-        with open(self.file_path + '.txt', 'w', encoding='utf-8') as file:
-            for item in data:
-                file.write(json.dumps(item, ensure_ascii=False) + '\n')
     
     def save_data(self, data: List[Dict], directory: str = DATA_DIR) -> None:
+        """
+        Сохраняет данные в текстовый файл
+
+        ----------------
+        * Аргументы:
+            * data (List[Dict]): Список словарей, содержащих информацию о вакансиях
+            * directory (str): Путь к директории
+
+        ----------------
+        * Возвращается:
+            * None
+        """
         with open(os.path.join(directory, self.file_name + '.txt'), 'w', encoding='utf-8') as file:
             for item in data:
                 file.write(json.dumps(item, ensure_ascii=False) + '\n')
-        
-    def load_data(self) -> List[Dict]:
-        with open(self.file_path + '.txt', 'r', encoding='utf-8') as file:
-            return [json.loads(line) for line in file]
+    
             
     def load_data(self, directory: str = DATA_DIR) -> List[Dict]:
+        """
+        Загружает данные из текстового файла
+
+        ----------------
+        * Аргументы:
+            * directory (str): Путь к директории
+
+        ----------------
+        * Возвращается:
+            * List[Dict]: Список словарей, содержащих информацию о вакансиях
+        """
         with open(os.path.join(directory, self.file_name + '.txt'), 'r', encoding='utf-8') as file:
             return [json.loads(line) for line in file]
         
@@ -214,7 +301,15 @@ class AreaFileWorker():
         
     def load_data(self) -> List[Dict]:
         """
-        Загружает данные из JSON-файла
+        Загружает данные город из HH JSON-файла
+
+        ----------------
+        * Аргументы:
+            * None
+
+        ----------------
+        * Возвращается:
+            * List[Dict]: Список словарей, содержащих информацию о городах и регионах
         """
         with open(self.file_path, 'r', encoding='utf-8') as file:
             return json.load(file)

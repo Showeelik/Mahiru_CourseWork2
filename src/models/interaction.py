@@ -3,7 +3,10 @@ from typing import List
 from src.api.hh_api import JobAPI
 from src.models.job import Job
 from src.utils import AreaFileWorker, JSONFileWorker, CSVFileWorker, ExcelFileWorker, TextFileWorker
-from src.utils import find_city
+from src.utils import find_city, setup_logger, get_integer_input
+
+
+logger = setup_logger(__name__)
 
 
 class Interaction(ABC):
@@ -16,12 +19,21 @@ class SearchInteraction(Interaction):
         self.api = api
 
     def interact(self) -> List[dict]:
+        """
+        Поиск вакансий по ключевому слову
+        """
+
         area = input("Выберите регион: ")
+
+        logger.info(f"Выбран регион поиска: {area}")
 
         city_id = find_city(AreaFileWorker().load_data(), area)
         query = input("Введите поисковый запрос: ")
 
         jobs_data = self.api.load_vacancies(query, area=city_id)
+
+        logger.info(f"Найдено {len(jobs_data)} вакансий.")
+
         return jobs_data
 
 class UserInteraction(Interaction):
@@ -29,10 +41,17 @@ class UserInteraction(Interaction):
         self.storage = storage
 
     def interact(self):
+        """
+        Вывод топ N вакансий по зарплате
+        """
         print("Получить топ N вакансий по зарплате")
 
-        N = int(input("Введите количество вакансий: "))
-        
+        N = get_integer_input("Введите количество вакансий: ")
+
+        if N == 0:
+            N = len(self.storage)
+
+        logger.info(f"Топ {N} вакансий по зарплате выбрано пользователь.")
 
         jobs = [Job(**job_data) for job_data in self.storage]
         top_jobs = sorted(jobs, reverse=True)[:N]
@@ -54,11 +73,16 @@ class FileInteraction(Interaction):
         self.storage = JSONFileWorker(self.file_name)
 
     def interact(self):
+        """
+        Сохранение вакансий в файл
+        """
         while True:
             
             choice = input("Cохранить вакансию в файл? (Y/N) ")
+
             
             if choice == "N":
+                logger.info("Вакансии не сохранены.")
                 break
 
             elif choice == "Y":
@@ -118,10 +142,12 @@ class FileInteraction(Interaction):
                         else:
                             self.storage.save_data(self.jobs)
 
+                        logger.info(f"Вакансии сохранены в файл {self.file_name}, в папке {self.file_dir}, формат {self.storage.__class__.__name__[:-10]}.")
                         print(f"Ваканси{'я' if len(self.jobs) == 1 else 'и'} добавлен{'а' if len(self.jobs) == 1 else 'ы'} в файл.")
                         break
 
                     elif choice == "5":
+
                         break
 
 
