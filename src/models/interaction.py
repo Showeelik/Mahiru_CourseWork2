@@ -1,18 +1,19 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import Any, List, Optional
+
 from src.api.hh_api import JobAPI
 from src.models.job import Job
-from src.utils import AreaFileWorker, JSONFileWorker, CSVFileWorker, ExcelFileWorker, TextFileWorker
-from src.utils import find_city, setup_logger, get_integer_input, filter_jobs_by_salary_range
-
+from src.utils import (AreaFileWorker, CSVFileWorker, ExcelFileWorker, FileWorker, JSONFileWorker, TextFileWorker,
+                       filter_jobs_by_salary_range, find_city, get_integer_input, setup_logger)
 
 logger = setup_logger(__name__)
 
 
 class Interaction(ABC):
     @abstractmethod
-    def interact(self):
+    def interact(self) -> List[dict]:
         pass
+
 
 class SearchInteraction(Interaction):
     def __init__(self, api: JobAPI):
@@ -30,7 +31,9 @@ class SearchInteraction(Interaction):
         query = input("Введите поисковый запрос: ")
         logger.info(f"Поиск по ключевому слову: {query}")
 
-        salary_range = input("Введите диапазон зарплаты. Формат: мин - макс (через пробел) или макс (необязательно): ") or None
+        salary_range = (
+            input("Введите диапазон зарплаты. Формат: мин - макс (через пробел) или макс (необязательно): ") or None
+        )
 
         print("Ищем вакансии...")
 
@@ -38,6 +41,9 @@ class SearchInteraction(Interaction):
 
         if salary_range:
             filter_jobs = filter_jobs_by_salary_range(jobs_data, salary_range)
+            if filter_jobs is None:
+                logger.info("Вакансий не найдено.")
+                return []
             logger.info(f"Найдено {len(filter_jobs)} вакансий.")
             return filter_jobs
 
@@ -45,13 +51,14 @@ class SearchInteraction(Interaction):
 
         return jobs_data
 
+
 class UserInteraction(Interaction):
-    def __init__(self, storage: List[dict]):
+    def __init__(self, storage: List[dict]) -> None:
         self.storage = storage
 
-    def interact(self):
+    def interact(self) -> Any:
         """
-        
+        Вывод вакансий
         """
         while True:
             print("1. Получить топ N вакансий по зарплате")
@@ -91,17 +98,14 @@ class UserInteraction(Interaction):
                 for job in filtered_jobs:
                     print(job)
 
-                
-
             elif choice == "3":
                 logger.info("Назад.")
                 break
-            
+
             else:
                 print("Неверная опция.")
                 continue
 
-        
             input("Для продолжения нажмите Enter\n")
 
             FileInteraction(filtered_jobs).interact()
@@ -113,7 +117,7 @@ class UserInteraction(Interaction):
         Фильтрация вакансий по ключевому слову
         """
         return [job for job in jobs if keyword.lower() in (job.description or "").lower()]
-    
+
     def sorted_jobs(self, jobs: List[Job], reverse: bool = True) -> List[Job]:
         """
         Сортировка вакансий по зарплате
@@ -123,21 +127,20 @@ class UserInteraction(Interaction):
 
 
 class FileInteraction(Interaction):
-    def __init__(self, data: List[Job]):
+    def __init__(self, data: List[Job]) -> None:
         self.data = data
-        self.jobs = [job.to_json() for job in self.data]
         self.file_name = "vacancies"
         self.file_dir = None
-        self.storage = JSONFileWorker(self.file_name)
+        self.storage: Optional[FileWorker] = None
 
-    def interact(self):
+    def interact(self) -> Any:
         """
         Сохранение вакансий в файл
         """
         while True:
-            
+
             choice = input("Cохранить вакансию в файл? (Y/N) ")
-            
+
             if choice.lower() == "n":
                 logger.info("Вакансии не сохранены.")
                 break
@@ -146,9 +149,8 @@ class FileInteraction(Interaction):
                 while True:
                     print("1. Название файла (не обязательно, по умолчанию: vacancies).")
                     print("2. Выбрать формат файла (не обязательно, по умолчанию: JSON).")
-                    print("3. Путь сохранения файла (не обязательно, по умолчанию в директорий data).")
-                    print("4. Продолжить")
-                    print("5. Назад")
+                    print("3. Продолжить")
+                    print("4. Назад")
                     choice = input("Выберите опцию: ")
 
                     if choice == "1":
@@ -191,18 +193,25 @@ class FileInteraction(Interaction):
                                 print("Неверный выбор, попробуйте еще раз.")
 
                     elif choice == "3":
-                        self.file_dir = input("Путь сохранения файла (Полный путь, пример: C:/Users/User/Downloads): ")
 
-                    elif choice == "4":
+                        if not self.storage:
+                            self.storage = JSONFileWorker(self.file_name)
+                            self.jobs = [job.to_json() for job in self.data]
+
                         if self.file_dir:
                             self.storage.save_data(self.jobs, self.file_dir)
                         else:
                             self.storage.save_data(self.jobs)
 
-                        logger.info(f"Вакансии сохранены в файл {self.file_name}, в папке {self.file_dir}, формат {self.storage.__class__.__name__[:-10]}.")
-                        print(f"Ваканси{'я' if len(self.jobs) == 1 else 'и'} добавлен{'а' if len(self.jobs) == 1 else 'ы'} в файл.")
+                        logger.info(
+                            f"Вакансии сохранены в файл {self.file_name}, в папке {self.file_dir}, "
+                            f"формат {self.storage.__class__.__name__[:-10]}."
+                        )
+                        print(
+                            f"Ваканси{'я' if len(self.jobs) == 1 else 'и'} "
+                            f"добавлен{'а' if len(self.jobs) == 1 else 'ы'} в файл."
+                        )
                         break
-                    elif choice == "5":
+                    elif choice == "4":
                         break
                 break
-
