@@ -17,7 +17,7 @@ class HHAPI(JobAPI):
     def __init__(self):
         self.url = 'https://api.hh.ru/vacancies'
         self.headers = {'User-Agent': 'HH-User-Agent'}
-        self.params = {'text': '', 'page': 0, 'per_page': 100, 'area': 1}
+        self.params = {'text': '', 'page': 0, 'per_page': 100, 'area': 1, 'only_with_salary': 'true'}
         self.vacancies = []
 
     def load_vacancies(self, keyword: str, page: int = 0, per_page: int = 20, area: int = 1) -> List[Dict]:
@@ -54,4 +54,5 @@ class HHAPI(JobAPI):
         
         logger.info(f'Выбранные {len(self.vacancies)} вакансии')
         return self.vacancies
+
 

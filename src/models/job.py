@@ -15,9 +15,9 @@ class Job:
         self.salary_from = self.salary.get("from", "Не указано от зарплаты") if self.salary else None
         self.salary_currency = self.salary.get("currency", "Не указана валюта") if self.salary else None
         self.snippet: str = kwargs["snippet"].get("requirement") or "Не указано требования вакансии"
-        self.requirement = self.snippet.replace("<highlighttext>", "\033[95m").replace("</highlighttext>", "\033[0m")
+        self.requirement = self.snippet.replace("<highlighttext>", "").replace("</highlighttext>", "")
         self.snippet2: str = kwargs["snippet"].get("responsibility") or "Не указано описание вакансии"
-        self.description = self.snippet2.replace("<highlighttext>", "\033[95m").replace("</highlighttext>", "\033[0m")
+        self.description = self.snippet2.replace("<highlighttext>", "").replace("</highlighttext>", "")
 
     def __str__(self) -> str:
         return  (f"{" Вакансия ":=^100}\n" \
@@ -62,9 +62,11 @@ class Job:
         Возвращает зарплату в виде целого числа
         """
         if self.salary_to == "Не указано зарплата" or self.salary_to is None:
-            return 0
-        # Пример для обработки зарплаты, нужно доработать под конкретный формат
-        return self.salary_to
+            if self.salary_from == "Не указано зарплата" or self.salary_from is None:
+                return 0
+            return int(self.salary_from)
+        return int(self.salary_to)
+
 
     def to_json(self) -> dict:
         """

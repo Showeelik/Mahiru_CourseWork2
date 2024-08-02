@@ -7,7 +7,7 @@ import json
 from config import AREAS_DIR, DATA_DIR, LOGS_DIR
 
 from abc import ABC, abstractmethod
-from typing import List, Dict, Optional
+from typing import Any, List, Dict, Optional
 
 
 class CustomFormatter(logging.Formatter):
@@ -143,6 +143,44 @@ def get_integer_input(prompt: str) -> int:
             return value
         except ValueError:
             return 0
+
+def filter_jobs_by_salary_range(jobs: List[Dict], salary_input: str) -> Optional[List[Dict]]:
+    """
+    ### Фильтрует вакансии по заданному диапазону зарплат или по одному значению.
+
+    ----------------
+    * Аргументы:
+        * jobs (List[Job]): Список объектов вакансий
+        * salary_input (str): Заданный диапазон зарплат
+    
+    ----------------
+    * Возвращается:
+        * Optional[List[Job]]: Список вакансий, удовлетворяющих заданному диапазону зарплат 
+        или по одному значению (если ввод был одним числом). 
+    """
+    try:
+        # Удаляем пробелы и разделяем по дефису
+        salary_parts = list(map(int, salary_input.replace(' ', '').split('-')))
+        
+        # Если введено одно значение, устанавливаем его как максимальную зарплату, минимальная = 0
+        if len(salary_parts) == 1:
+            min_salary = 0
+            max_salary = salary_parts[0]
+        elif len(salary_parts) == 2:
+            min_salary, max_salary = salary_parts
+        else:
+            raise ValueError("Некорректный ввод диапазона зарплат")
+    except ValueError:
+        print("Некорректный формат диапазона зарплат. Пожалуйста, используйте формат 'мин - макс' или одно значение.")
+        return None
+
+    filtered_jobs = []
+    for job in jobs:
+        salary_target = job["salary"]["to"] or job["salary"]["from"]
+        if min_salary <= salary_target <= max_salary:
+            filtered_jobs.append(job)
+        
+    return filtered_jobs
 
 class FileWorker(ABC):
     def __init__(self, file_name: str):

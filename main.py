@@ -22,17 +22,24 @@ def main():
 
             logger.info("Выполняется поиск вакансий.")
 
-            print("Поиск вакансий.")
 
             search_interaction = SearchInteraction(api)
             storage = search_interaction.interact()
-
+            
             print("\nПоиск завершен.")
 
             print(f"Найдено {len(storage)} вакансий.\n")
             logger.info(f"Найдено {len(storage)} вакансий.")
 
             input("Для продолжения нажмите Enter\n")
+
+            if storage == 0:
+                logger.info("Вакансий не найдено.")
+                continue
+            
+            user_interaction = UserInteraction(storage)
+            user_interaction.interact()
+
 
         elif choice == "2":
             logger.info("Выполняется работа с вакансиями.")
@@ -56,4 +63,3 @@ def main():
 if __name__ == "__main__":
     logger.info("Программа запущена")
     main()
-
